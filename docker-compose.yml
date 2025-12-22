@@ -1,0 +1,23 @@
+services:
+  portfolio:
+    build: .
+    container_name: portfolio-observability
+    restart: unless-stopped
+    networks:
+      - traefik-public
+      - traefik-internal # To access Prometheus
+    environment:
+      - PROMETHEUS_URL=http://prometheus:9090
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik-public"
+      - "traefik.http.routers.portfolio.rule=Host(`portfolio.subetupaginacp.com`)" # Update domain as needed
+      - "traefik.http.routers.portfolio.entrypoints=websecure"
+      - "traefik.http.routers.portfolio.tls.certresolver=myresolver"
+      - "traefik.http.services.portfolio.loadbalancer.server.port=3000"
+
+networks:
+  traefik-public:
+    external: true
+  traefik-internal:
+    external: true
