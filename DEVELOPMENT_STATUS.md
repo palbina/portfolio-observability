@@ -26,8 +26,9 @@ This project is a "Living Portfolio" built with Next.js 15+ that showcases real-
 
 Organized into logical sections with a responsive grid layout:
 
-- **System Status**: **[UPDATED]** Real-time connectivity check:
-  - **Dynamic Status**: Queries Prometheus `up` metric to toggle between "ONLINE" (Green Pulse) and "OFFLINE" (Red Static).
+- **System Status**: **[DONE]** Real-time connectivity check:
+  - **Dynamic Status**: Queries Prometheus `up` metric to toggle line/offline status.
+  - **Public API**: `/api/observability/metrics` exposed for external consumers (e.g. main portfolio) via Traefik Middleware (CORS enabled).
   - **Cyberpunk Header**: "SYSTEM STATUS" title features a premium cyberpunk aesthetic with theme-aware animated text shadows (Neon in Dark Mode, Contrast in Light Mode).
 - **GitHub Activity**: **[NEW]** Real-time coding stats (contributions, streaks) fetched via GraphQL.
 - **VPS Resources**: CPU, Memory, Disk Usage (Node Exporter).
