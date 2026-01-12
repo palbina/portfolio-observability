@@ -54,7 +54,7 @@ jobs:
         env:
           # PRE-REQUISITO: Debes crear este Secret en GitHub con un PAT que tenga permisos de escritura en 'homelab-infra'
           GH_TOKEN: ${{ secrets.GITOPS_PAT }}
-          INFRA_REPO: "palbina/homelab-infra"
+          INFRA_REPO: "palbina/talos-gitops"
           FILE_PATH: "k8s/02-apps/portfolio/observability-deployment.yaml"
         run: |
           # 1. Definir nuevo tag (Short SHA)
