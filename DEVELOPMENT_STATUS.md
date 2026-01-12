@@ -18,7 +18,7 @@ This project is a "Living Portfolio" built with Next.js 15+ that showcases real-
 - **Data Source**:
   - **Prometheus**: Real-time infrastructure metrics
   - **GitHub GraphQL API**: Development activity & contribution stats
-- **Deployment**: Docker Standalone + Traefik v3 Labels
+- **Deployment**: Kubernetes (Production) / Docker Compose (Local)
 
 ## ✨ Features Implemented
 
@@ -70,7 +70,10 @@ Organized into logical sections with a responsive grid layout:
 ### 4. Deployment Ready
 
 - **Docker**: Optimized `Dockerfile` using Next.js standalone output mode.
-- **Traefik**: `docker-compose.yml` pre-configured to expose via `portfolio.subetupaginacp.com` with TLS.
+- **Kubernetes**: Fully defined manifests in `homelab-infra/k8s/02-apps/portfolio`.
+  - **Ingress**: Exposed via Traefik IngressRoute at `status-taloslab.subetupaginacp.com`.
+  - **Internal DNS**: Connects to `kube-stack-kube-prometheus-prometheus.monitoring:9090`.
+- **Local Dev**: `docker-compose.yml` with log rotation configured (10m size limit).
 
 ## 🔧 How to Continue Development
 

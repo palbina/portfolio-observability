@@ -48,3 +48,38 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      # GitOps Step: Update Infrastructure Repository
+      - name: Update Infrastructure Manifest
+        if: github.ref == 'refs/heads/main'
+        env:
+          # PRE-REQUISITO: Debes crear este Secret en GitHub con un PAT que tenga permisos de escritura en 'homelab-infra'
+          GH_TOKEN: ${{ secrets.GITOPS_PAT }}
+          INFRA_REPO: "palbina/homelab-infra"
+          FILE_PATH: "k8s/02-apps/portfolio/observability-deployment.yaml"
+        run: |
+          # 1. Definir nuevo tag (Short SHA)
+          NEW_TAG="sha-$(git rev-parse --short HEAD)"
+          echo "Updating deployment to version: $NEW_TAG"
+
+          # 2. Clonar repo de infraestructura
+          git clone --depth 1 https://x-access-token:${GH_TOKEN}@github.com/${INFRA_REPO}.git infra-repo
+          cd infra-repo
+
+          # 3. Configurar Git Identity
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+
+          # 4. Actualizar el manifiesto usando sed (Reemplaza el tag :latest o anterior por el nuevo SHA)
+          # Busca: image: ghcr.io/palbina/portfolio-observability:.*
+          sed -i "s|image: ghcr.io/palbina/portfolio-observability:.*|image: ghcr.io/palbina/portfolio-observability:${NEW_TAG}|" $FILE_PATH
+
+          # 5. Commit & Push
+          if [[ -n $(git status -s) ]]; then
+            git add $FILE_PATH
+            git commit -m "deploy(observability): update image tag to ${NEW_TAG}"
+            git push origin main
+            echo "✅ Manifest updated and pushed to homelab-infra"
+          else
+            echo "⚠️ No changes detected in manifest (maybe already updated?)"
+          fi
