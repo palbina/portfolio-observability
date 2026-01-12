@@ -47,7 +47,6 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
-          cache-to: type=gha,mode=max
 
       # GitOps Step: Update Infrastructure Repository
       - name: Update Infrastructure Manifest
@@ -63,7 +62,7 @@ jobs:
           echo "Updating deployment to version: $NEW_TAG"
 
           # 2. Clonar repo de infraestructura
-          git clone --depth 1 https://x-access-token:${GH_TOKEN}@github.com/${INFRA_REPO}.git infra-repo
+          git clone --depth 1 https://${GH_TOKEN}@github.com/${INFRA_REPO}.git infra-repo
           cd infra-repo
 
           # 3. Configurar Git Identity
