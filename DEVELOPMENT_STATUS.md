@@ -1,6 +1,6 @@
 # 🚀 Portfolio Observability - Development Status
 
-**Last Updated:** December 20, 2025
+**Last Updated:** January 11, 2026
 **Version:** 0.2.0 (Enhanced UI & Features)
 
 ## 📋 Overlay
@@ -75,6 +75,23 @@ Organized into logical sections with a responsive grid layout:
   - **Internal DNS**: Connects to `kube-stack-kube-prometheus-prometheus.monitoring:9090`.
 - **Local Dev**: `docker-compose.yml` with log rotation configured (10m size limit).
 
+### 5. CI/CD Pipeline (GitOps)
+
+Fully automated deployment pipeline via GitHub Actions:
+
+1. **Trigger**: Push to `main` branch.
+2. **Build**: Multi-stage Docker build (Node 22 Alpine + Next.js Standalone).
+3. **Push**: Image pushed to GHCR with tags `latest` and `sha-xxxxxxx`.
+4. **GitOps Update**: Pipeline automatically updates `talos-gitops` repository:
+   - Edits `k8s/02-apps/portfolio/observability-deployment.yaml`
+   - Changes image tag to new SHA.
+   - Commits and pushes to `main`.
+5. **ArgoCD Sync**: Detects manifest change and performs Rolling Update.
+
+**Required Secrets (GitHub Actions):**
+
+- `GITOPS_PAT`: Personal Access Token with `repo` scope for `talos-gitops`.
+
 ## 🔧 How to Continue Development
 
 ### Prerequisites
@@ -100,7 +117,7 @@ GITHUB_TOKEN=ghp_your_token_here
 ### Roadmap / Next Steps
 
 1. **Odoo Specific Metrics**: Add a section for specific Odoo business metrics (e.g., Orders/hr) using `postgres-exporter` queries.
-2. **CI/CD**: Setup GitHub Actions to build and push the Docker image to the VPS.
+2. ~~**CI/CD**: Setup GitHub Actions to build and push the Docker image.~~ ✅ **DONE** (GitOps Pipeline Implemented)
 
 ## 🔍 Troubleshooting
 
