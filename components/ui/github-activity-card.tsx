@@ -35,7 +35,7 @@ export function GithubActivityCard({ data }: GithubActivityCardProps) {
                     <span className="text-xs text-muted-foreground ml-2 font-sans font-normal">contributions (last year)</span>
                 </div>
                 <div className="h-[80px] mt-4 w-full">
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                         <BarChart data={flatDays}>
                             <Tooltip
                                 contentStyle={{

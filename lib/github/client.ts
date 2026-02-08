@@ -49,6 +49,9 @@ export async function fetchGitHubStats(username: string): Promise<GitHubStats> {
   `;
 
     try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3000); // 3s timeout
+
         const res = await fetch(GITHUB_GRAPHQL_API, {
             method: "POST",
             headers: {
@@ -59,8 +62,9 @@ export async function fetchGitHubStats(username: string): Promise<GitHubStats> {
                 query,
                 variables: { username },
             }),
-            next: { revalidate: 3600 }, // Cache for 1 hour
-        });
+            next: { revalidate: 3600 },
+            signal: controller.signal,
+        }).finally(() => clearTimeout(timeoutId));
 
         if (!res.ok) {
             const errorText = await res.text();
