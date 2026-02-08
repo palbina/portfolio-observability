@@ -67,3 +67,6 @@ next-env.d.ts
 # OS Metadata
 Thumbs.db
 .DS_Store
+
+# Python
+.venv
