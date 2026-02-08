@@ -117,3 +117,36 @@ export function transformMetricMap(response: PrometheusResponse, label: string =
 
     return result;
 }
+
+export function aggregateMetric(response: PrometheusResponse): ChartDataPoint[] {
+    if (response.status !== "success" || !response.data.result.length) {
+        return [];
+    }
+
+    const result: ChartDataPoint[] = [];
+    const valuesList = response.data.result.map(r => r.values);
+
+    if (valuesList.length === 0) return [];
+
+    // Assuming all series have same timestamps (aligned)
+    const length = valuesList[0].length;
+
+    for (let i = 0; i < length; i++) {
+        let sum = 0;
+        let time = 0;
+        for (const values of valuesList) {
+            if (values[i]) {
+                sum += parseFloat(values[i][1]);
+                time = values[i][0]; // Take timestamp from current
+            }
+        }
+        if (time > 0) {
+            result.push({
+                time: time * 1000,
+                value: sum
+            });
+        }
+    }
+
+    return result;
+}

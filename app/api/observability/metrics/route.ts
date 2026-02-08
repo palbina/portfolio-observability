@@ -1,39 +1,10 @@
 
 import { type NextRequest, NextResponse } from "next/server";
-import { queryRange, query, checkHealth, transformMetric } from "@/lib/prometheus/client";
+import { transformMetric, aggregateMetric } from "@/lib/prometheus/client";
+import { fetchDashboardMetrics } from "@/lib/data/dashboard";
+import { maskContainerName } from "@/lib/utils";
 
-export const dynamic = 'force-dynamic'; // Defaults to auto, but we want to ensure it's dynamic for metrics
-
-// Helper to mask sensitive container names (Moved from page.tsx to share logic if needed, or just duplicated here for the API)
-function maskContainerName(name: string): string {
-    const safeMap: Record<string, string> = {
-        "odoo": "Odoo ERP Core",
-        "wordpress": "WordPress Store",
-        "traefik": "Traefik Proxy",
-        "portainer": "Portainer Mgmt",
-        "grafana": "Grafana Dashboards",
-        "prometheus": "Prometheus DB",
-        "cadvisor": "Container Advisor",
-        "node-exporter": "Node Metrics",
-        "loki": "Loki Logs",
-        "postgres": "PostgreSQL DB",
-        "redis": "Redis Cache",
-        "minio": "Object Storage",
-        "seaweedfs": "SeaweedFS"
-    };
-
-    const lowerName = name.toLowerCase();
-
-    for (const [key, label] of Object.entries(safeMap)) {
-        if (lowerName.includes(key)) {
-            return label; // Return pretty name if matched
-        }
-    }
-
-    // Deterministic ID
-    const id = Math.abs(name.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0) * 31).toString(16).substring(0, 4).toUpperCase();
-    return `SECURE-MODULE-0x${id}`;
-}
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
@@ -60,7 +31,7 @@ export async function GET(request: NextRequest) {
     }
 
     try {
-        const [
+        const {
             cpuData,
             ramData,
             diskData,
@@ -75,33 +46,7 @@ export async function GET(request: NextRequest) {
             wordpressRpsData,
             portainerRpsData,
             isOnline
-        ] = await Promise.all([
-            // System
-            queryRange('100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)', start, now, step),
-            queryRange('((node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes) * 100', start, now, step),
-            queryRange('100 - ((node_filesystem_avail_bytes{mountpoint="/",fstype!="rootfs"} / node_filesystem_size_bytes{mountpoint="/",fstype!="rootfs"}) * 100)', start, now, step),
-
-            // Traefik
-            queryRange('sum(rate(traefik_entrypoint_requests_total[5m]))', start, now, step),
-            queryRange('sum(traefik_open_connections)', start, now, step),
-            queryRange('sum(rate(traefik_entrypoint_requests_total{code=~"5.."}[5m]))', start, now, step),
-
-            // Docker
-            queryRange('sum(rate(container_cpu_usage_seconds_total{image!=""}[5m])) * 100', start, now, step),
-            queryRange('sum(container_memory_usage_bytes{image!=""}) / 1024 / 1024 / 1024', start, now, step),
-            queryRange('count(container_last_seen{image!=""})', start, now, step),
-
-            // Instant list
-            query('container_last_seen{image!=""}'),
-
-            // Services
-            queryRange('sum(rate(traefik_service_requests_total{service=~".*odoo.*"}[5m]))', start, now, step),
-            queryRange('sum(rate(traefik_service_requests_total{service=~".*wordpress.*"}[5m]))', start, now, step),
-            queryRange('sum(rate(traefik_service_requests_total{service=~".*portainer.*"}[5m]))', start, now, step),
-
-            // Health
-            checkHealth(),
-        ]);
+        } = await fetchDashboardMetrics(start, now, step);
 
         // Transform data
         const metrics = {
@@ -117,8 +62,10 @@ export async function GET(request: NextRequest) {
                 errors: transformMetric(errorData),
             },
             docker: {
-                cpu: transformMetric(dockerCpuData),
-                memory: transformMetric(dockerMemData),
+                // Use aggregateMetric because the source data is detailed (per container)
+                // but this API endpoint provides summary stats.
+                cpu: aggregateMetric(dockerCpuData),
+                memory: aggregateMetric(dockerMemData),
                 countMetrics: transformMetric(containerCountData), // Time series count
             },
             services: {

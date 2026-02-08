@@ -27,3 +27,8 @@
 
 - **Privacy-First**: Sensitive container names are obfuscated with deterministic hashes (`SECURE-MODULE-0x...`).
 - **Public Safe-List**: Known public services (e.g., Odoo) remain recognizable.
+
+### D. Context-Aware Intelligence (RAG)
+
+- **Semantic Search**: Integrated Qdrant-based documentation search.
+- **Smart Hooks**: Git pre-commit hooks that suggest relevant documentation based on staged changes.

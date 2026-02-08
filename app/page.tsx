@@ -1,7 +1,7 @@
-import { queryRange, query, transformMetric, checkHealth, transformMetricMap } from "@/lib/prometheus/client";
+import { transformMetric, checkHealth, transformMetricMap } from "@/lib/prometheus/client";
 import { MetricsCard } from "@/components/ui/metrics-card";
 import { ContainerSection } from "@/components/container-section";
-import { fetchGitHubStats } from "@/lib/github/client";
+import { fetchDashboardMetrics } from "@/lib/data/dashboard";
 import { GithubActivityCard } from "@/components/ui/github-activity-card";
 import { ModeToggle } from "@/components/ui/mode-toggle";
 import { TimeRangeFilter } from "@/components/ui/time-range-filter"; // Import Filter
@@ -40,53 +40,24 @@ export default async function DashboardPage(props: DashboardPageProps) {
   }
 
   // Fetch metrics in parallel
-  const [
+  // Fetch metrics using centralized service
+  const {
     cpuData,
     ramData,
     diskData,
     requestData,
-    connectionsData, // Renamed from latencyData
+    connectionsData,
     errorData,
     dockerCpuData,
     dockerMemData,
     containerCountData,
-    containerListData, // Instant query result
+    containerListData,
     odooRpsData,
     wordpressRpsData,
     portainerRpsData,
     githubStats,
     isOnline
-  ] = await Promise.all([
-    // System (Node Exporter)
-    queryRange('100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)', start, now, step),
-    queryRange('((node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes) * 100', start, now, step),
-    queryRange('100 - ((node_filesystem_avail_bytes{mountpoint="/",fstype!="rootfs"} / node_filesystem_size_bytes{mountpoint="/",fstype!="rootfs"}) * 100)', start, now, step),
-
-    // Traefik Global
-    queryRange('sum(rate(traefik_entrypoint_requests_total[5m]))', start, now, step),
-    queryRange('sum(traefik_open_connections)', start, now, step), // Active Connections
-    queryRange('sum(rate(traefik_entrypoint_requests_total{code=~"5.."}[5m]))', start, now, step), // 5xx Errors
-
-    // Docker (cAdvisor)
-    queryRange('rate(container_cpu_usage_seconds_total{image!=""}[5m]) * 100', start, now, step),
-    queryRange('container_memory_usage_bytes{image!=""} / 1024 / 1024 / 1024', start, now, step),
-    queryRange('count(container_last_seen{image!=""})', start, now, step),
-
-    // Instant list of containers (New)
-    query('container_last_seen{image!=""}'),
-
-    // Specific Services (Traefik Service Labels)
-    // Using Regex ( =~ ) to catch variations like odoo@docker, odoo-svc, etc.
-    queryRange('sum(rate(traefik_service_requests_total{service=~".*odoo.*"}[5m]))', start, now, step),
-    queryRange('sum(rate(traefik_service_requests_total{service=~".*wordpress.*"}[5m]))', start, now, step),
-    queryRange('sum(rate(traefik_service_requests_total{service=~".*portainer.*"}[5m]))', start, now, step),
-
-    // GitHub Stats
-    fetchGitHubStats("palbina"),
-
-    // Health Check
-    checkHealth(),
-  ]);
+  } = await fetchDashboardMetrics(start, now, step);
 
   const cpuMetrics = transformMetric(cpuData);
   const ramMetrics = transformMetric(ramData);

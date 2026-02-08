@@ -33,6 +33,13 @@ npm run dev
 
 # Build for production
 npm run build
+
+# -----------------
+# RAG Context Tools
+# -----------------
+
+# Intelligent Search
+python ../scripts/ask_local_context.py "how does the prometheus proxy work?"
 ```
 
 ### Troubleshooting

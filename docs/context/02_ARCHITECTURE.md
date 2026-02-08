@@ -23,6 +23,14 @@ This service acts as a secure proxy and visualization layer between the public i
 * **`components/ui/container-list.tsx`**: Fixed-height list for container status.
 * **`app/page.tsx`**: Unified dashboard with responsive grid layout.
 
+## 4. Knowledge Base (RAG)
+
+Integrated Retrieval-Augmented Generation for code navigation:
+
+* **Vector DB**: Qdrant (Self-hosted).
+* **Search Engine**: Nomic Embed Text v1.5 (Semantic).
+* **Usage**: `scripts/ask_local_context.py` for instant documentation lookup.
+
 ### Security Architecture
 
 * **Server-Side Fetching**: API keys (GitHub, Prometheus) never exposed to client.

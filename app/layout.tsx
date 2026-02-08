@@ -6,11 +6,13 @@ import { ThemeProvider } from "@/components/theme-provider";
 const orbitron = Orbitron({
   variable: "--font-orbitron",
   subsets: ["latin"],
+  display: "swap",
 });
 
 const jetbrainsMono = JetBrains_Mono({
   variable: "--font-jetbrains-mono",
   subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
